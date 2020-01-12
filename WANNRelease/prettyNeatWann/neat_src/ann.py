@@ -36,8 +36,12 @@ def getNodeOrder(nodeG,connG):
   """
   conn = np.copy(connG)
   node = np.copy(nodeG)
+  node[1,node[1,:]==5] = 2
   nIns = len(node[0,node[1,:] == 1]) + len(node[0,node[1,:] == 4])
   nOuts = len(node[0,node[1,:] == 2])
+  # print("---")
+  # print(nIns)
+  # print(nOuts)
   
   # Create connection and initial weight matrices
   conn[3,conn[4,:]==0] = np.nan # disabled but still connected
@@ -71,7 +75,8 @@ def getNodeOrder(nodeG,connG):
   
   # Add In and outs back and reorder wMat according to sort
   Q += nIns+nOuts
-  Q = np.r_[lookup[:nIns], Q, lookup[nIns:nIns+nOuts]]
+  # Q = np.r_[lookup[:nIns], Q, lookup[nIns:nIns+nOuts]]
+  Q = np.r_[np.arange(0, nIns), Q, nIns + np.arange(0, nOuts)]
   wMat = wMat[np.ix_(Q,Q)]
   
   return Q, wMat
@@ -154,6 +159,7 @@ def act(weights, aVec, nInput, nOutput, inPattern):
   nodeAct[:,0] = 1 # Bias activation
   nodeAct[:,1:nInput+1] = inPattern
 
+
   # Propagate signal through hidden to output nodes
   iNode = nInput+1
   for iNode in range(nInput+1,nNodes):
@@ -161,6 +167,10 @@ def act(weights, aVec, nInput, nOutput, inPattern):
       nodeAct[:,iNode] = applyAct(aVec[iNode], rawAct) 
       #print(nodeAct)
   output = nodeAct[:,-nOutput:]   
+
+  
+  if np.all(wMat == 0):
+    output -= 10
   return output
 
 def applyAct(actId, x):
@@ -222,6 +232,19 @@ def applyAct(actId, x):
   elif actId == 11: # Squared
     value = x**2
     
+  elif actId == 12: # floor
+    value = np.floor(x)
+    
+  elif actId == 13: # floor
+    value = np.ceil(x)
+    
+  elif actId == 14: # floor
+    value = np.round(x)
+    
+  elif actId == 15: # recip
+    value = x.copy()
+    value[x != 0] = 1/x[x != 0]
+
   else:
     value = x
 

@@ -6,6 +6,7 @@ np.set_printoptions(linewidth=160)
 
 from neat_src import * # NEAT
 from domain   import * # Task environments
+# from utils.utils import loadHyp, updateHyp
 
 def main(argv):
   """Tests network on task N times and returns mean fitness.

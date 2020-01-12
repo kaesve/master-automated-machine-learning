@@ -72,8 +72,11 @@ def recombine(self, species, innov, gen):
   
   # Breed child population
   for i in range(nOffspring):  
+    # print("m%s"%i)
+
     if np.random.rand() > p['prob_crossover']:
       # Mutation only: take only highest fit parent
+      # print("N%s"%pop[parents[0,i]].recurrence)
       child, innov = pop[parents[0,i]].createChild(p,innov,gen)
     else:
       # Crossover

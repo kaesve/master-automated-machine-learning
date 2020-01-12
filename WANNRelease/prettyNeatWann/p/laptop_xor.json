@@ -1,0 +1,11 @@
+{
+    "task":"xor",
+    "maxGen": 1024,
+    "alg_nReps": 3,
+    "popSize": 300,
+    "select_eliteRatio": 0.025,
+    "select_tournSize": 8,
+    "bestReps": 8,
+    "prob_crossover": 0.0,
+    "prob_initEnable": 0.20
+}

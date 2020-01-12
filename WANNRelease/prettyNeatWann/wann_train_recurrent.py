@@ -13,8 +13,13 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 
 # prettyNeat
-from neat_src import * # NEAT and WANNs
-from domain import *   # Task environments
+# from neat_src import * # NEAT and WANNs
+from domain.wann_task_gym_recurrent import RecurrentWannGymTask  # Task environments
+from domain.config import games
+from domain.utils import loadHyp, updateHyp
+from neat_src.wann_recurrent import RecurrentWann
+from neat_src.wann_ind_recurrent import RecurrentWannInd
+from neat_src.wann_dataGatherer import WannDataGatherer
 
 
 # -- Run NEAT ------------------------------------------------------------ -- #
@@ -23,7 +28,7 @@ def master():
   """
   global fileName, hyp
   data = WannDataGatherer(fileName, hyp)
-  alg  = Wann(hyp)
+  alg  = RecurrentWann(hyp)
 
   for gen in range(hyp['maxGen']):        
     pop = alg.ask()            # Get newly evolved individuals from NEAT  
@@ -134,23 +139,22 @@ def batchMpiEval(pop, sameSeedForEachIndividual=True):
   for iBatch in range(nBatch): # Send one batch of individuals
     for iWork in range(nSlave): # (one to each worker if there)
       if i < nJobs:
-        wVec   = pop[i].wMat.flatten()
-        n_wVec = np.shape(wVec)[0]
-        aVec   = pop[i].aVec.flatten()
-        n_aVec = np.shape(aVec)[0]
+        ind = pop[i]
+        n_conn = ind.conn.shape[1]
+        n_node = ind.node.shape[1]
 
-        comm.send(n_wVec, dest=(iWork)+1, tag=1)
-        comm.Send(  wVec, dest=(iWork)+1, tag=2)
-        comm.send(n_aVec, dest=(iWork)+1, tag=3)
-        comm.Send(  aVec, dest=(iWork)+1, tag=4)
+        # print("sending %s %s %s nodes" % (iWork+1, ind.node.shape, ind.node.dtype))
+        comm.send(  n_conn, dest=(iWork)+1, tag=1)
+        comm.Send(ind.conn.flatten(), dest=(iWork)+1, tag=2)
+        comm.send(  n_node, dest=(iWork)+1, tag=3)
+        comm.Send(ind.node.flatten(), dest=(iWork)+1, tag=4)
         if sameSeedForEachIndividual is False:
           comm.send(seed.item(i), dest=(iWork)+1, tag=5)
         else:
           comm.send(  seed, dest=(iWork)+1, tag=5)        
 
       else: # message size of 0 is signal to shutdown workers
-        n_wVec = 0
-        comm.send(n_wVec,  dest=(iWork)+1)
+        comm.send(0,  dest=(iWork)+1)
       i = i+1 
   
     # Get fitness values back for that batch
@@ -179,24 +183,28 @@ def slave():
     result - (float)    - fitness value of network
   """
   global hyp  
-  task = WannGymTask(games[hyp['task']], nReps=hyp['alg_nReps'])
+  task = RecurrentWannGymTask(games[hyp['task']], nReps=hyp['alg_nReps'])
 
   # Evaluate any weight vectors sent this way
   while True:
-    n_wVec = comm.recv(source=0,  tag=1)# how long is the array that's coming?
-    if n_wVec > 0:
-      wVec = np.empty(n_wVec, dtype='d')# allocate space to receive weights
-      comm.Recv(wVec, source=0,  tag=2) # recieve weights
+    n_conn = comm.recv(source=0,  tag=1)# how long is the array that's coming?
+    if n_conn > 0:
+      # print('%s conns %s' % (rank, n_conn))
+      conn = np.empty(5*n_conn, dtype='d')# allocate space to receive weights
+      comm.Recv(conn, source=0,  tag=2) # recieve weights
 
-      n_aVec = comm.recv(source=0,tag=3)# how long is the array that's coming?
-      aVec = np.empty(n_aVec, dtype='d')# allocate space to receive activation
-      comm.Recv(aVec, source=0,  tag=4) # recieve it
+      n_node = comm.recv(source=0,tag=3)# how long is the array that's coming?
+      # print('%s nodes %s' % (rank, n_node))
+      node = np.empty(3*n_node, dtype='d')# allocate space to receive activation
+      comm.Recv(node, source=0,  tag=4) # recieve it
       seed = comm.recv(source=0, tag=5) # random seed as int
 
-      result = task.getFitness(wVec,aVec,hyp,seed=seed) # process it
+      ind = RecurrentWannInd(conn.reshape((5, n_conn)), node.reshape((3, n_node)), recurrence=hyp['ann_recurrence'])
+      
+      result = task.getFitness(ind,hyp,seed=seed) # process it
       comm.Send(result, dest=0)            # send it back
 
-    if n_wVec < 0: # End signal recieved
+    if n_conn < 0: # End signal recieved
       print('Worker # ', rank, ' shutting down.')
       break
 
@@ -259,7 +267,7 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description=('Evolve WANNs'))
   
   parser.add_argument('-d', '--default', type=str,\
-   help='default hyperparameter file', default='p/default_wann.json')
+   help='default hyperparameter file', default='p/default_wann_recurrent.json')
 
   parser.add_argument('-p', '--hyperparam', type=str,\
    help='hyperparameter file', default='p/laptop_swing.json')

@@ -41,7 +41,12 @@ def make_env(env_name, seed=-1, render_mode=False):
       from domain.classify_gym import mnist_256
       trainSet, target  = mnist_256()
 
-    env = ClassifyEnv(trainSet,target)  
+    env = ClassifyEnv(trainSet,target)
+  
+  elif (env_name.startswith("SDF")):
+    from domain.sdf_gym import SdfEnv
+    
+    env = SdfEnv()
 
 
   # -- Cart Pole Swing up -------------------------------------------- -- #

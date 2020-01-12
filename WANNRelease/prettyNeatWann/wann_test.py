@@ -13,6 +13,7 @@ np.set_printoptions(linewidth=160)
 
 from neat_src import * # NEAT and WANNs
 from domain import *   # Task environments
+# from utils.utils import loadHyp, updateHyp
 
 def main(argv):
   infile  = args.infile

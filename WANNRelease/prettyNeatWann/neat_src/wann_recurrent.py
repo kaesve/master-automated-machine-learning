@@ -4,13 +4,13 @@ import copy
 import json
 
 # from domain import *  # Task environments
-from .wann_ind import WannInd
+from .wann_ind_recurrent import RecurrentWannInd
 # from utils import *
 from .nsga_sort import nsga_sort
-from .neat import Neat
+from .neat_recurrent import RecurrentNeat
 
 
-class Wann(Neat):
+class RecurrentWann(RecurrentNeat):
   """NEAT main class. Evolves population given fitness values of individuals.
   """
   def __init__(self, hyp):
@@ -31,8 +31,8 @@ class Wann(Neat):
                 [4,:] == Generation evolved
       gen     - (int)      - Current generation
     """
-    Neat.__init__(self,hyp)
-    self.indType = WannInd
+    RecurrentNeat.__init__(self,hyp)
+    self.indType = RecurrentWannInd
 
   def tell(self,reward):
     """Assigns fitness to current population

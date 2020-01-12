@@ -1,0 +1,11 @@
+{
+  "task":"biped",
+  "alg_nReps": 4,
+  "maxGen": 256,
+  "popSize": 64,
+  "prob_initEnable": 0.25,
+  "select_tournSize": 8,
+  "select_eliteRatio": 0.05,
+  "bestReps": 16,
+  "ann_recurrence": 2
+}

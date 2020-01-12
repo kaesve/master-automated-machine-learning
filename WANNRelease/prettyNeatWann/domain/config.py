@@ -86,6 +86,42 @@ L = [list(range(1, mnist256.input_size)),\
 label = [item for sublist in L for item in sublist]
 mnist256 = mnist256._replace(in_out_labels=label)
 games['mnist256'] = mnist256
+# -- Digit Classification ------------------------------------------------ -- #
+
+# > Scikit learn digits data set
+sdf = Game(env_name='SDF_circle-v1',
+  actionSelect='all', # all, soft, hard
+  input_size=2,
+  output_size=1,
+  time_factor=0,
+  layers=[15,15],
+  i_act=np.full(2,1),
+  h_act=[1,3,4,5,6,7,8,9,10, 11, 12], # No step function
+  o_act=np.full(1,1),
+  weightCap = 2.0,
+  noise_bias=0.0,
+  output_noise=[False, False, False],
+  max_episode_length = 0,
+  in_out_labels = [ 'x', 'y', 'd' ]
+)
+games['sdf'] = sdf
+
+xor = Game(env_name='gates_xor-v1',
+  actionSelect='all', # all, soft, hard
+  input_size=2,
+  output_size=1,
+  time_factor=0,
+  layers=[15,15],
+  i_act=np.full(2,1),
+  h_act=[1, 3,4,5,6,7,8,9,10, 11,   15],
+  o_act=np.full(1,1),
+  weightCap = 2.0,
+  noise_bias=0.0,
+  output_noise=[False, False, False],
+  max_episode_length = 0,
+  in_out_labels = [ 'x', 'y', 'd' ]
+)
+games['xor'] = xor
 
 
 # -- Cart-pole Swingup --------------------------------------------------- -- #
@@ -113,6 +149,18 @@ games['swingup_hard'] = cartpole_swingup
 cartpole_swingup = cartpole_swingup._replace(\
     env_name='CartPoleSwingUp', max_episode_length=1000)
 games['swingup'] = cartpole_swingup
+
+# cartpole_swingup = cartpole_swingup.copy()
+games['swingup_altered'] = cartpole_swingup._replace(env_name='CartPoleSwingUp_alt', max_episode_length=1000,\
+  input_size = 6, i_act=np.full(6,1),\
+  output_size=2, o_act=np.full(2,1), \
+  in_out_labels=['x','x_dot','cos(theta)','sin(theta)','theta_dot', 'recurrence', 'force', 'recurrence'])
+  
+games['swingup_simple'] = cartpole_swingup._replace(env_name='CartPoleSwingUp_simple', max_episode_length=1000,\
+  input_size = 3, i_act=np.full(3,1),\
+  output_size=1, o_act=np.full(1,1), \
+  in_out_labels=['x','cos(theta)','sin(theta)', 'force'])
+
 
 
 # -- Bipedal Walker ------------------------------------------------------ -- #

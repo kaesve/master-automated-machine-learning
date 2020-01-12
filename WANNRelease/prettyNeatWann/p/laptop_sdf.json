@@ -1,0 +1,15 @@
+{
+    "task":"sdf",
+    "maxGen": 1024,
+    "alg_nReps": 3,
+    "popSize": 300,
+    "select_eliteRatio": 0.025,
+    "select_tournSize": 8,
+    "bestReps": 8,
+    "prob_crossover": 0.0,
+    "prob_mutAct":  0.50,
+    "prob_addNode": 0.30,
+    "prob_addConn": 0.60,
+    "prob_enable":  0.40,
+    "prob_initEnable": 0.80
+}

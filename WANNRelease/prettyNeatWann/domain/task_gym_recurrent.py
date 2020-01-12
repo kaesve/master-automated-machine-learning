@@ -6,7 +6,7 @@ from domain.make_env import make_env
 from neat_src import act, selectAct
 
 
-class GymTask():
+class RecurrentGymTask():
   """Problem domain to be solved by neural network. Uses OpenAI Gym patterns.
   """ 
   def __init__(self, game, paramOnly=False, nReps=1): 
@@ -37,7 +37,7 @@ class GymTask():
     # Special needs...
     self.needsClosed = (game.env_name.startswith("CartPoleSwingUp"))    
   
-  def getFitness(self, wVec, aVec, view=False, nRep=False, seed=-1):
+  def getFitness(self, ind, view=False, nRep=False, seed=-1):
     """Get fitness of a single individual.
   
     Args:
@@ -56,16 +56,15 @@ class GymTask():
     """
     if nRep is False:
       nRep = self.nReps
-    wVec[np.isnan(wVec)] = 0
     reward = np.empty(nRep)
     for iRep in range(nRep):
       if seed > 0:
         seed = seed+iRep
-      reward[iRep] = self.testInd(wVec, aVec, view=view, seed=seed)
+      reward[iRep] = self.testInd(ind, view=view, seed=seed)
     fitness = np.mean(reward)
     return fitness
 
-  def testInd(self, wVec, aVec, hyp=None, view=False,seed=-1):
+  def testInd(self, ind, hyp=None, view=False,seed=-1):
     """Evaluate individual on task
     Args:
       wVec    - (np_array) - weight matrix as a flattened vector
@@ -80,6 +79,9 @@ class GymTask():
     Returns:
       fitness - (float)    - reward earned in trial
     """
+    if not ind.express():
+      return 0
+
     if seed >= 0:
       random.seed(seed)
       np.random.seed(seed)
@@ -87,7 +89,7 @@ class GymTask():
 
     state = self.env.reset()
     self.env.t = 0
-    annOut = act(wVec, aVec, self.nInput, self.nOutput, state)
+    annOut = ind.act(state)
     action = selectAct(annOut, self.actSelect)
     state, reward, done, info = self.env.step(action)
     
@@ -102,7 +104,8 @@ class GymTask():
       totalReward = reward
     
     for tStep in range(self.maxEpisodeLength): 
-      annOut = act(wVec, aVec, self.nInput, self.nOutput, state) 
+    # for tStep in range(5): 
+      annOut = ind.act(state) 
       action = selectAct(annOut,self.actSelect) 
       state, reward, done, info = self.env.step(action)
       totalReward += reward  
